@@ -1,32 +1,16 @@
-/**
- * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
- * for Docker builds.
- */
 import { existsSync } from "fs"
 import { dirname, join, resolve } from "path"
 import { fileURLToPath } from "url"
 
+/**
+ * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
+ * for Docker builds.
+ */
+
+await import("./src/env.js")
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-
-try {
-  const envPath = join(__dirname, "src", "env.js")
-  if (existsSync(envPath)) {
-    console.log("Loading env.js from:", envPath)
-    await import(envPath)
-  } else {
-    console.warn("env.js not found at:", envPath)
-  }
-} catch (error) {
-  console.warn(
-    "Failed to load env.js:",
-    error instanceof Error ? error.message : String(error)
-  )
-  // Continue without env validation if SKIP_ENV_VALIDATION is set
-  if (!process.env.SKIP_ENV_VALIDATION) {
-    throw error
-  }
-}
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
