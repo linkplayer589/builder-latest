@@ -7,10 +7,26 @@ import { fileURLToPath } from "url"
  * for Docker builds.
  */
 
-await import("./src/env.js")
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+const envPathSrc = join(__dirname, "src", "env.js")
+const envPathRoot = join(__dirname, "env.js")
+
+try {
+  if (existsSync(envPathSrc)) {
+    await import(envPathSrc)
+  } else if (existsSync(envPathRoot)) {
+    await import(envPathRoot)
+  } else {
+    console.log("No env.js file found, skipping env validation")
+  }
+} catch (error) {
+  console.log(
+    "Error loading env.js:",
+    error instanceof Error ? error.message : String(error)
+  )
+}
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
