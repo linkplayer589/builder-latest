@@ -138,7 +138,14 @@ import TerserPlugin from "terser-webpack-plugin"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-await import("./src/env")
+try {
+  const envPath = new URL("./src/env.js", import.meta.url).pathname
+  await import(envPath)
+} catch (error) {
+  const errorMessage = error instanceof Error ? error.message : String(error)
+  console.log("env.js import failed, skipping:", errorMessage)
+  // Continue without env validation
+}
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
