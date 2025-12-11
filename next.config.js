@@ -131,6 +131,7 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
+import { existsSync } from "fs"
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import TerserPlugin from "terser-webpack-plugin"
@@ -138,13 +139,22 @@ import TerserPlugin from "terser-webpack-plugin"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+// Conditionally import env.js if it exists
 try {
-  const envPath = new URL("./src/env.js", import.meta.url).pathname
-  await import(envPath)
+  const envPath = resolve(__dirname, "src/env.js")
+  if (existsSync(envPath)) {
+    console.log("Loading env.js from:", envPath)
+    await import(envPath)
+  } else {
+    console.warn("env.js not found at:", envPath)
+  }
 } catch (error) {
-  const errorMessage = error instanceof Error ? error.message : String(error)
-  console.log("env.js import failed, skipping:", errorMessage)
-  // Continue without env validation
+  const message = error instanceof Error ? error.message : String(error)
+  console.warn("Failed to load env.js:", message)
+  // Continue without env validation if SKIP_ENV_VALIDATION is set
+  if (!process.env.SKIP_ENV_VALIDATION) {
+    throw error
+  }
 }
 
 /** @type {import("next").NextConfig} */
@@ -165,14 +175,11 @@ const nextConfig = {
     },
   },
 
-  // Enable experimental cache features but DISABLE Turbopack for production builds
+  // Enable experimental cache features
   experimental: {
     useCache: true,
     // Disable Turbopack for production builds to avoid minification issues
-    // turbopack: {
-    //   // Only enable Turbopack in development for faster builds
-    //   enabled: process.env.NODE_ENV === "development",
-    // },
+    // Keep Turbopack config only in experimental to avoid empty object error
   },
 
   // Mark pino, thread-stream, and Payload as external packages for server components
@@ -185,27 +192,17 @@ const nextConfig = {
     "@payloadcms/richtext-slate",
   ],
 
+  // Turbopack configuration (moved to experimental)
+  // turbopack: {}, // REMOVED - Empty object causes error
+
   // Generate source maps in production for debugging
   productionBrowserSourceMaps: true,
 
-  // Use SWC minification instead of Terser for better compatibility
-  // swcMinify: true,
-
-  // Configure compiler options for better production builds
-  compiler: {
-    // Remove console.log in production except for errors
-    removeConsole:
-      process.env.NODE_ENV === "production"
-        ? {
-            exclude: ["error", "warn"],
-          }
-        : false,
-  },
-
+  // Webpack configuration for production builds
   webpack: (config, { dev, isServer, buildId, webpack }) => {
     config.resolve.extensions = [".tsx", ".ts", ".jsx", ".js"]
 
-    // Handle problematic modules
+    // Exclude binary files and README files from processing
     if (isServer) {
       config.module = config.module || {}
       config.module.rules = config.module.rules || []
@@ -219,6 +216,22 @@ const nextConfig = {
       // Ignore esbuild platform-specific binaries
       config.resolve.alias = config.resolve.alias || {}
       config.resolve.alias["@esbuild/linux-x64/bin/esbuild"] = false
+
+      // Add empty-loader for problematic files
+      try {
+        const emptyLoaderPath = resolve(__dirname, "./src/lib/empty-loader.cjs")
+        if (existsSync(emptyLoaderPath)) {
+          config.module.rules.push({
+            test: /\.(test|spec|bench)\.(js|ts|mjs|cjs)$/,
+            include: /node_modules/,
+            use: {
+              loader: emptyLoaderPath,
+            },
+          })
+        }
+      } catch (error) {
+        // Ignore if empty-loader doesn't exist
+      }
     }
 
     // Ignore problematic files in node_modules
@@ -231,7 +244,7 @@ const nextConfig = {
 
     // Production build optimizations with controlled minification
     if (!dev && !isServer) {
-      // Use Terser with safe minification settings
+      // Keep optimization but configure it carefully
       config.optimization = {
         ...config.optimization,
         minimize: true,
@@ -239,14 +252,16 @@ const nextConfig = {
           new TerserPlugin({
             terserOptions: {
               compress: {
-                // Safer compression to avoid "Ia" errors
+                // Disable aggressive name mangling
+                keep_classnames: true,
+                keep_fnames: true,
+                // Keep variable names readable for debugging
+                keep_fargs: true,
+                // Safer compression options
                 drop_debugger: true,
-                drop_console: false, // Let Next.js compiler.handle this
+                drop_console: false, // Let Next.js compiler handle console removal
                 pure_funcs: ["console.log", "console.info", "console.debug"],
                 passes: 2,
-                // IMPORTANT: Disable aggressive optimizations that cause issues
-                keep_fnames: true,
-                keep_classnames: true,
                 // Disable unsafe optimizations
                 unsafe: false,
                 unsafe_arrows: false,
@@ -258,28 +273,51 @@ const nextConfig = {
                 unsafe_undefined: false,
               },
               mangle: {
-                // Use safe mangling to avoid "Ia" errors
-                safari10: true,
-                // Keep function names for debugging
-                keep_fnames: true,
+                // Configure mangling carefully
                 keep_classnames: true,
+                keep_fnames: true,
+                // Use a deterministic mangling to avoid issues
+                safari10: true,
+                // Don't mangle properties
+                properties: false,
                 // Don't mangle top-level names
                 toplevel: false,
-                // Don't mangle properties
-                properties: {
-                  keep_quoted: true,
-                  regex: undefined, // Don't mangle any properties
-                },
+                // Reserve problematic variable names
+                reserved: [
+                  "Ia",
+                  "Ib",
+                  "Ic",
+                  "Id",
+                  "Ie",
+                  "If",
+                  "Ig",
+                  "Ih",
+                  "Ii",
+                  "Ij",
+                  "Ik",
+                  "Il",
+                  "Im",
+                  "In",
+                  "Io",
+                  "Ip",
+                  "Iq",
+                  "Ir",
+                  "Is",
+                  "It",
+                  "Iu",
+                  "Iv",
+                  "Iw",
+                  "Ix",
+                  "Iy",
+                  "Iz",
+                ],
               },
               format: {
                 comments: false,
                 beautify: false,
+                // Keep ASCII safe
                 ascii_only: true,
-                // Keep braces for better debugging
-                braces: true,
               },
-              // Keep ECMAScript 5+ compatibility
-              ecma: 5,
               // Source map for debugging
               sourceMap: true,
             },
@@ -287,17 +325,25 @@ const nextConfig = {
             parallel: true,
           }),
         ],
-        // Use named chunk IDs for better debugging
-        chunkIds: "named",
-        moduleIds: "named",
-        // Disable module concatenation if it causes issues
-        concatenateModules: false,
-        // Enable tree shaking but be conservative
+        // Keep readable chunk names
+        chunkIds: "deterministic",
+        moduleIds: "deterministic",
+        // Enable module concatenation safely
+        concatenateModules: true,
+        // Enable tree shaking
         usedExports: true,
-        sideEffects: "flag",
+        sideEffects: true,
       }
 
-      // Add environment variables
+      // Performance hints
+      config.performance = {
+        ...config.performance,
+        hints: "warning",
+        maxAssetSize: 250000,
+        maxEntrypointSize: 250000,
+      }
+
+      // Add a plugin to identify the problematic module
       config.plugins.push(
         new webpack.DefinePlugin({
           "process.env.NEXT_PHASE": JSON.stringify(buildId),
@@ -305,23 +351,39 @@ const nextConfig = {
           "process.env.BUILD_ID": JSON.stringify(buildId),
         })
       )
+
+      // Add source map for better debugging
+      if (!config.devtool) {
+        config.devtool = "source-map"
+      }
     }
 
-    // Add fallback for empty-loader if it exists
+    // Resolve aliases for problematic imports
+    config.resolve.alias = config.resolve.alias || {}
+
+    // Add empty-module redirects for problematic imports
     try {
-      const emptyLoaderPath = resolve(__dirname, "./src/lib/empty-loader.cjs")
-      config.module.rules.push({
-        test: /\.(test|spec)\.(js|ts)$/,
-        include: /node_modules/,
-        use: {
-          loader: "null-loader",
-        },
-      })
-    } catch (e) {
-      // Ignore if empty-loader doesn't exist
+      const emptyModulePath = resolve(__dirname, "./src/lib/empty-module.js")
+      if (existsSync(emptyModulePath)) {
+        config.resolve.alias["@esbuild/linux-x64/bin/esbuild"] = emptyModulePath
+        config.resolve.alias["thread-stream/test"] = emptyModulePath
+        config.resolve.alias["thread-stream/bench"] = emptyModulePath
+      }
+    } catch (error) {
+      // Ignore if empty-module doesn't exist
     }
 
     return config
+  },
+
+  // Compiler options for production
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+            exclude: ["error", "warn"],
+          }
+        : false,
   },
 }
 
