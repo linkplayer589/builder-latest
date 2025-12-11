@@ -1,4 +1,4 @@
 {
   "installCommand": "pnpm install",
-  "buildCommand": "NEXT_DISABLE_TURBOPACK=1 pnpm run build"
+  "buildCommand": "NEXT_DISABLE_TURBOPACK=1 pnpm run build --webpack"
 }
