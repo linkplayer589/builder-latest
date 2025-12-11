@@ -138,7 +138,7 @@ import TerserPlugin from "terser-webpack-plugin"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-await import("@/env")
+await import("./src/env")
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
