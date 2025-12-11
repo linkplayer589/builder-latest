@@ -19,6 +19,7 @@ const nextConfig = {
   experimental: {
     useCache: true,
   },
+  turbopack: {}, // Disable Turbopack until more stable
 
   // Mark pino, thread-stream, and Payload as external packages for server components
   serverExternalPackages: [
