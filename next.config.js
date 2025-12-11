@@ -49,6 +49,7 @@ const nextConfig = {
   // Enable experimental cache features
   experimental: {
     useCache: true,
+    disableOptimizedLoading: true,
     // Try disabling Turbopack for builds to work around worker_threads issue
     // This is a known Turbopack bug: https://github.com/vercel/next.js/issues/86099
     // Setting this to false may help, but Next.js 16 uses Turbopack by default
