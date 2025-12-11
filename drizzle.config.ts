@@ -1,4 +1,4 @@
-import { env } from "@/env.js"
+import { env } from "@/env"
 import { type Config } from "drizzle-kit"
 
 // import { databasePrefix } from "@/lib/constants"
@@ -9,5 +9,5 @@ export default {
   out: "./drizzle",
   dbCredentials: {
     url: env.DATABASE_URL,
-  }
+  },
 } satisfies Config
