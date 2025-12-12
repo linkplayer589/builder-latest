@@ -10,17 +10,6 @@ import TerserPlugin from "terser-webpack-plugin"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const envPathSrc = join(__dirname, "src", "env.js")
-const envPathRoot = join(__dirname, "env.js")
-
-if (existsSync(envPathSrc)) {
-  await import(envPathSrc)
-} else if (existsSync(envPathRoot)) {
-  await import(envPathRoot)
-} else {
-  console.log("No env.js found - skipping")
-}
-
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   // TypeScript config - linting and typechecking done separately in CI
