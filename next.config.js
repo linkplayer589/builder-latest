@@ -12,6 +12,8 @@ const __dirname = dirname(__filename)
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  output: "standalone",
+
   // TypeScript config - linting and typechecking done separately in CI
   typescript: { ignoreBuildErrors: true },
 
