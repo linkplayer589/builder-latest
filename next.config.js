@@ -9,7 +9,7 @@ import TerserPlugin from "terser-webpack-plugin"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// await import("./src/env.js")
+await import("./src/env.js")
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
