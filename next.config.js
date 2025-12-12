@@ -61,6 +61,7 @@ const nextConfig = {
       // Ignore esbuild platform-specific binaries
       config.resolve.alias = config.resolve.alias || {}
       config.resolve.alias["@esbuild/linux-x64/bin/esbuild"] = false
+      config.resolve.alias["@"] = resolve(__dirname, "src")
     }
 
     // Ignore problematic files in node_modules
