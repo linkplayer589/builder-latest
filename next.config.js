@@ -239,12 +239,8 @@ const nextConfig = {
             parallel: true,
             extractComments: {
               condition: /^\**!|@preserve|@license|@cc_on/i,
-              filename: (fileData) => {
-                return `LICENSES.txt?content=${fileData.filename}`
-              },
-              banner: (licenseFile) => {
-                return `License information can be found in ${licenseFile}`
-              },
+              filename: "LICENSES.txt",
+              banner: () => "License information can be found in LICENSES.txt",
             },
             terserOptions: {
               parse: {
