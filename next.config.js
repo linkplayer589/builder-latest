@@ -48,7 +48,7 @@ const nextConfig = {
     config.resolve.extensions = [".tsx", ".ts", ".jsx", ".js"]
 
     config.resolve.alias = config.resolve.alias || {}
-    config.resolve.alias["@"] = resolve(__dirname, "src")
+    config.resolve.alias["@/env"] = resolve(__dirname, "src/env.js")
 
     // Exclude binary files and README files from processing
     if (isServer) {
