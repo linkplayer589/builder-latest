@@ -47,6 +47,9 @@ const nextConfig = {
   webpack: (config, { dev, isServer, buildId, webpack }) => {
     config.resolve.extensions = [".tsx", ".ts", ".jsx", ".js"]
 
+    config.resolve.alias = config.resolve.alias || {}
+    config.resolve.alias["@"] = resolve(__dirname, "src")
+
     // Exclude binary files and README files from processing
     if (isServer) {
       config.module = config.module || {}
@@ -59,9 +62,7 @@ const nextConfig = {
       })
 
       // Ignore esbuild platform-specific binaries
-      config.resolve.alias = config.resolve.alias || {}
       config.resolve.alias["@esbuild/linux-x64/bin/esbuild"] = false
-      config.resolve.alias["@"] = resolve(__dirname, "src")
     }
 
     // Ignore problematic files in node_modules
