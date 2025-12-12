@@ -74,8 +74,8 @@ const nextConfig = {
             terserOptions: {
               compress: {
                 // Disable aggressive name mangling
-                keep_classnames: true,
-                keep_fnames: true,
+                keep_classnames: false,
+                keep_fnames: false,
                 // Keep variable names readable for debugging
                 keep_fargs: true,
                 // Disable property mangling
@@ -88,14 +88,14 @@ const nextConfig = {
               },
               mangle: {
                 // Configure mangling carefully
-                keep_classnames: true,
-                keep_fnames: true,
+                keep_classnames: false,
+                keep_fnames: false,
                 // Use a deterministic mangling to avoid issues
                 safari10: true,
                 // Don't mangle properties
-                properties: false,
+                properties: true,
                 // Don't mangle top-level names
-                toplevel: false,
+                toplevel: true,
               },
               format: {
                 comments: false,
