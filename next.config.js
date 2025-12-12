@@ -12,8 +12,6 @@ const __dirname = dirname(__filename)
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  output: "standalone",
-
   // TypeScript config - linting and typechecking done separately in CI
   typescript: { ignoreBuildErrors: true },
 
@@ -76,8 +74,8 @@ const nextConfig = {
             terserOptions: {
               compress: {
                 // Disable aggressive name mangling
-                keep_classnames: false,
-                keep_fnames: false,
+                keep_classnames: true,
+                keep_fnames: true,
                 // Keep variable names readable for debugging
                 keep_fargs: true,
                 // Disable property mangling
@@ -90,14 +88,14 @@ const nextConfig = {
               },
               mangle: {
                 // Configure mangling carefully
-                keep_classnames: false,
-                keep_fnames: false,
+                keep_classnames: true,
+                keep_fnames: true,
                 // Use a deterministic mangling to avoid issues
                 safari10: true,
                 // Don't mangle properties
-                properties: true,
+                properties: false,
                 // Don't mangle top-level names
-                toplevel: true,
+                toplevel: false,
               },
               format: {
                 comments: false,
