@@ -2,14 +2,24 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
-import { dirname, resolve } from "path"
+import { existsSync } from "fs"
+import { dirname, join, resolve } from "path"
 import { fileURLToPath } from "url"
 import TerserPlugin from "terser-webpack-plugin"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-await import("./src/env.js")
+const envPathSrc = join(__dirname, "src", "env.js")
+const envPathRoot = join(__dirname, "env.js")
+
+if (existsSync(envPathSrc)) {
+  await import(envPathSrc)
+} else if (existsSync(envPathRoot)) {
+  await import(envPathRoot)
+} else {
+  console.log("No env.js found - skipping")
+}
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
